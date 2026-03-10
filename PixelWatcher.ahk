@@ -33,12 +33,19 @@ CheckInterval := 250
 AlertWidth  := 64
 AlertHeight := 64
 
+; Delay before alert escalates from green to red (in milliseconds)
+AlertEscalationMs := 3000
+
 ; =============================================================================
 ; SETUP - Build two separate overlay GUIs
 ; =============================================================================
 
 Alert1Visible := false
 Alert2Visible := false
+Alert1ShownAt := 0
+Alert2ShownAt := 0
+Alert1Escalated := false
+Alert2Escalated := false
 Suppressed := false
 
 SysGet, MonW, 78
@@ -48,17 +55,17 @@ SysGet, MonH, 79
 Gui, Alert1:+AlwaysOnTop -Caption +ToolWindow +E0x20
 Gui, Alert1:Color, 1A1A1A
 Gui, Alert1:Margin, 0, 0
-Gui, Alert1:Font, s48 Bold, Arial
-Gui, Alert1:Add, Text, w%AlertWidth% h%AlertHeight% Center cWhite BackgroundTrans +0x200, Q
-Gui, Alert1:Color, FF0000
+Gui, Alert1:Font, s28 Bold, Arial
+Gui, Alert1:Add, Text, vAlert1Text w%AlertWidth% h%AlertHeight% Center cWhite BackgroundTrans +0x200, Q
+Gui, Alert1:Color, 00CC00
 
 ; Alert 2 - shows "E" when pixel 2 doesn't match
 Gui, Alert2:+AlwaysOnTop -Caption +ToolWindow +E0x20
 Gui, Alert2:Color, 1A1A1A
 Gui, Alert2:Margin, 0, 0
-Gui, Alert2:Font, s48 Bold, Arial
-Gui, Alert2:Add, Text, w%AlertWidth% h%AlertHeight% Center cWhite BackgroundTrans +0x200, E
-Gui, Alert2:Color, FF0000
+Gui, Alert2:Font, s28 Bold, Arial
+Gui, Alert2:Add, Text, vAlert2Text w%AlertWidth% h%AlertHeight% Center cWhite BackgroundTrans +0x200, E
+Gui, Alert2:Color, 00CC00
 
 ; Position alerts side by side, centered on screen with a small gap
 AlertGap := 20
@@ -83,26 +90,14 @@ return
 CheckPixels:
     IfWinNotActive, ahk_class POEWindowClass
     {
-        if (Alert1Visible) {
-            Gui, Alert1:Hide
-            Alert1Visible := false
-        }
-        if (Alert2Visible) {
-            Gui, Alert2:Hide
-            Alert2Visible := false
-        }
+        GoSub, HideAlert1
+        GoSub, HideAlert2
         return
     }
 
     if (Suppressed) {
-        if (Alert1Visible) {
-            Gui, Alert1:Hide
-            Alert1Visible := false
-        }
-        if (Alert2Visible) {
-            Gui, Alert2:Hide
-            Alert2Visible := false
-        }
+        GoSub, HideAlert1
+        GoSub, HideAlert2
         return
     }
 
@@ -114,26 +109,76 @@ CheckPixels:
 
     if (!Match1) {
         if (!Alert1Visible) {
+            Gui, Alert1:Color, 00CC00
+            remaining := AlertEscalationMs / 1000
+            GuiControl, Alert1:, Alert1Text, % Format("{:.1f}", remaining)
             Gui, Alert1:Show, x%Alert1X% y%AlertY% NoActivate, PixelWatcherAlert1
             Alert1Visible := true
+            Alert1ShownAt := A_TickCount
+            Alert1Escalated := false
+        } else if (!Alert1Escalated) {
+            elapsed := A_TickCount - Alert1ShownAt
+            if (elapsed >= AlertEscalationMs) {
+                Gui, Alert1:Color, FF0000
+                GuiControl, Alert1:, Alert1Text, Q
+                Alert1Escalated := true
+            } else {
+                remaining := (AlertEscalationMs - elapsed) / 1000
+                GuiControl, Alert1:, Alert1Text, % Format("{:.1f}", remaining)
+            }
         }
     } else {
-        if (Alert1Visible) {
-            Gui, Alert1:Hide
-            Alert1Visible := false
-        }
+        GoSub, HideAlert1
     }
 
     if (!Match2) {
         if (!Alert2Visible) {
+            Gui, Alert2:Color, 00CC00
+            remaining := AlertEscalationMs / 1000
+            GuiControl, Alert2:, Alert2Text, % Format("{:.1f}", remaining)
             Gui, Alert2:Show, x%Alert2X% y%AlertY% NoActivate, PixelWatcherAlert2
             Alert2Visible := true
+            Alert2ShownAt := A_TickCount
+            Alert2Escalated := false
+        } else if (!Alert2Escalated) {
+            elapsed := A_TickCount - Alert2ShownAt
+            if (elapsed >= AlertEscalationMs) {
+                Gui, Alert2:Color, FF0000
+                GuiControl, Alert2:, Alert2Text, E
+                Alert2Escalated := true
+            } else {
+                remaining := (AlertEscalationMs - elapsed) / 1000
+                GuiControl, Alert2:, Alert2Text, % Format("{:.1f}", remaining)
+            }
         }
     } else {
-        if (Alert2Visible) {
-            Gui, Alert2:Hide
-            Alert2Visible := false
-        }
+        GoSub, HideAlert2
+    }
+return
+
+; =============================================================================
+; HIDE / RESET ALERT SUBROUTINES
+; =============================================================================
+
+HideAlert1:
+    if (Alert1Visible) {
+        Gui, Alert1:Hide
+        Gui, Alert1:Color, 00CC00
+        GuiControl, Alert1:, Alert1Text, Q
+        Alert1Visible := false
+        Alert1ShownAt := 0
+        Alert1Escalated := false
+    }
+return
+
+HideAlert2:
+    if (Alert2Visible) {
+        Gui, Alert2:Hide
+        Gui, Alert2:Color, 00CC00
+        GuiControl, Alert2:, Alert2Text, E
+        Alert2Visible := false
+        Alert2ShownAt := 0
+        Alert2Escalated := false
     }
 return
 

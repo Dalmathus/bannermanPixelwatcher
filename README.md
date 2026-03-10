@@ -1,6 +1,6 @@
 # PixelWatcher for Path of Exile
 
-An AutoHotkey v1 script that monitors two screen pixels for a specific colour. When a pixel no longer matches the expected colour, a red alert box (labelled **Q** or **E**) is displayed on screen. This is designed to watch banner/buff indicators in Path of Exile and warn you when they drop off.
+An AutoHotkey v1 script that monitors two screen pixels for a specific colour. When a pixel no longer matches the expected colour, a green alert box appears with a countdown timer. If the mismatch persists past the countdown, the box turns red and displays the key label (**Q** or **E**). This is designed to watch banner/buff indicators in Path of Exile and warn you when they drop off.
 
 ## Requirements
 
@@ -40,6 +40,16 @@ ColorTolerance := 10
 ```
 
 A tolerance of `10` means each of the R, G, and B channels may differ by up to 10 from the expected value and still be considered a match. Increase this if lighting or post-processing causes slight colour shifts.
+
+### Alert Escalation Delay
+
+When an alert first appears it is **green** and displays a countdown timer (e.g. "3.0", "2.8", ..., "0.0"). Once the countdown reaches zero, the box turns **red** and shows the key label (**Q** or **E**) to indicate the buff needs attention:
+
+```ahk
+AlertEscalationMs := 3000
+```
+
+The value is in milliseconds (3000 = 3 seconds). The countdown updates every `CheckInterval` tick (default 250ms) with one decimal place. If the watched pixel returns to the expected colour before the countdown elapses, the alert disappears and the timer resets — the next appearance will start green with a fresh countdown.
 
 ### Check Interval
 
@@ -127,4 +137,4 @@ ExpectedColor := 0xDED277
 
 ## How It Works
 
-The script polls two screen pixel locations every `CheckInterval` milliseconds. Each pixel's current colour is compared to `ExpectedColor` using per-channel tolerance. If a pixel no longer matches, a small red overlay box appears on screen showing **Q** (pixel 1) or **E** (pixel 2) to alert you. The overlays are click-through so they never interfere with gameplay. The script only runs checks while Path of Exile is the active window.
+The script polls two screen pixel locations every `CheckInterval` milliseconds. Each pixel's current colour is compared to `ExpectedColor` using per-channel tolerance. If a pixel no longer matches, a small green overlay box appears showing a countdown in seconds. While the countdown is ticking, the box stays green. Once the countdown reaches zero, the box turns red and shows the key label — **Q** (pixel 1) or **E** (pixel 2) — to indicate the buff has been down long enough to need attention. The overlays are click-through so they never interfere with gameplay. The script only runs checks while Path of Exile is the active window.
