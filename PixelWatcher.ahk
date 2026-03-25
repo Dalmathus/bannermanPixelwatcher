@@ -113,6 +113,8 @@ CheckPixels:
             remaining := AlertEscalationMs / 1000
             GuiControl, Alert1:, Alert1Text, % Format("{:.1f}", remaining)
             Gui, Alert1:Show, x%Alert1X% y%AlertY% NoActivate, PixelWatcherAlert1
+            WinSet, Transparent, 255, PixelWatcherAlert1
+            WinSet, ExStyle, +0x20, PixelWatcherAlert1
             Alert1Visible := true
             Alert1ShownAt := A_TickCount
             Alert1Escalated := false
@@ -120,6 +122,8 @@ CheckPixels:
             elapsed := A_TickCount - Alert1ShownAt
             if (elapsed >= AlertEscalationMs) {
                 Gui, Alert1:Color, FF0000
+                WinSet, Transparent, 255, PixelWatcherAlert1
+                WinSet, ExStyle, +0x20, PixelWatcherAlert1
                 GuiControl, Alert1:, Alert1Text, Q
                 Alert1Escalated := true
             } else {
@@ -137,6 +141,8 @@ CheckPixels:
             remaining := AlertEscalationMs / 1000
             GuiControl, Alert2:, Alert2Text, % Format("{:.1f}", remaining)
             Gui, Alert2:Show, x%Alert2X% y%AlertY% NoActivate, PixelWatcherAlert2
+            WinSet, Transparent, 255, PixelWatcherAlert2
+            WinSet, ExStyle, +0x20, PixelWatcherAlert2
             Alert2Visible := true
             Alert2ShownAt := A_TickCount
             Alert2Escalated := false
@@ -144,6 +150,8 @@ CheckPixels:
             elapsed := A_TickCount - Alert2ShownAt
             if (elapsed >= AlertEscalationMs) {
                 Gui, Alert2:Color, FF0000
+                WinSet, Transparent, 255, PixelWatcherAlert2
+                WinSet, ExStyle, +0x20, PixelWatcherAlert2
                 GuiControl, Alert2:, Alert2Text, E
                 Alert2Escalated := true
             } else {
